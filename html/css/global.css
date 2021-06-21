@@ -1,0 +1,17 @@
+.video-container {
+    width: 90%;
+    /* padding: 2%; */
+    /* background-color: lightgray; */
+}
+
+.video-round {
+    border-radius: 10px;
+    width: 100%;
+    height: auto;
+    border: 1px solid lightgray;
+}
+
+.btn:focus, .btn:active {
+    outline: none !important;
+    box-shadow: none;
+}

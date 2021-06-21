@@ -1,0 +1,25 @@
+<head>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <!-- <script src="videoroom.js"></script> -->
+    <!-- <script src="main.js"></script> -->
+    <script src="bundle.js"></script>
+    <link rel="stylesheet" href="css/global.css" type="text/css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css"
+        integrity="undefined" crossorigin="anonymous">
+</head>
+
+<div class="container">
+    <h1 class="text-muted">Video streaming</h1>
+    <!-- <div class="video-container">
+        <video id="video" class="video-round" playsinline></video>
+    </div> -->
+    <div class="d-flex">
+        <button onclick="window.location.href='./host.html'" class="btn btn-primary m-2">Host</button>
+        <button onclick="window.location.href='./listener.html'" class="btn btn-primary m-2">Listener</button>
+    </div>
+
+    <!-- <button class="btn btn-primary mt-2" id="start">Start</button> -->
+
+    <button class="btn btn-primary mt-2 d-none shadow-none" id="subscribe">Subscribe</button>
+    <div id="remote"></div>
+</div>

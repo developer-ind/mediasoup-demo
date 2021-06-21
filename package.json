@@ -1,0 +1,22 @@
+{
+  "name": "mediasoup",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx rollup -c",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "mediasoup": "^3.7.6",
+    "mediasoup-client": "^3.6.30"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}
