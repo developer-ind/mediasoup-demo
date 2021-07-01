@@ -9,8 +9,16 @@ var recvTransport;
 const device = new mediasoupClient.Device();
 let producer;
 let allProducers = [];
-let consumers = [];
+let consumers = [null, null, null];
 $(document).ready(function () {
+    window.onunload = async function () {
+        if (sendTransport) {
+            await sendTransport.close();
+            await httpPostRequest(ROUTES.STOP_PRODUCER, {
+                id: producer
+            })
+        }
+    }
     loadDevice()
         .then(({ routerRtpCapabilities }) => {
             device.load({ routerRtpCapabilities })
@@ -28,10 +36,10 @@ $(document).ready(function () {
                 if (!device.canProduce('video')) {
                     console.log("Device can't produce video")
                 }
-                return sendTransport.produce({
-                    track: localCam.getVideoTracks()[0],
-                    encodings: camEncodings(),
-                });
+                // return sendTransport.produce({
+                //     track: localCam.getVideoTracks()[0],
+                //     encodings: camEncodings(),
+                // });
             })
             .then((res) => {
                 addLocalVideo('startcamera');
@@ -43,10 +51,6 @@ $(document).ready(function () {
                 $('#start').html('Stop');
                 $('#start').unbind("click");
                 $('#start').bind("click", async function () {
-                    await sendTransport.close();
-                    await httpPostRequest(ROUTES.STOP_PRODUCER, {
-                        id: producer
-                    })
                     window.location.reload();
                 });
 
@@ -136,7 +140,7 @@ function createTransport(mode) {
         mode: mode
     })
         .then((res) => res.json())
-        .then(({ transportOptions }) => {
+        .then(({ transportOptions, created }) => {
             if (mode === 'send') {
                 sendTransport = device.createSendTransport(transportOptions);
                 transport = sendTransport;
@@ -153,7 +157,6 @@ function createTransport(mode) {
                     .then(() => callback())
                     .then(() => errback())
             });
-
             if (mode === 'send') {
                 transport.on('produce', async ({ kind, rtpParameters, appData },
                     callback, errback) => {
@@ -183,12 +186,13 @@ function updateConsumer() {
             const exitProducers = allProducers.filter(a => !producerIds.includes(a));
             allProducers = [...producerIds];
             console.log("Consumers to remove: ", exitProducers);
+            console.log("Consumers to add: ", extraProducers);
             exitProducers.forEach(async (producer) => {
                 const consumer = consumers.filter(consumer => consumer.producerId === producer)[0];
                 console.log("consume remove: ", consumer)
                 if (consumer) {
                     await consumer.close();
-                    const index = consumers.indexOf(consumer);
+                    const index = consumers.map(c => c.id).indexOf(consumer.id);
                     console.log("Index: ", consumers, index)
                     const videoEl = document.getElementById(`video-remote${index + 1}`)
                     console.log("Video eleemt: ", videoEl);

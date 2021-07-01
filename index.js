@@ -52,6 +52,7 @@ const mediaCodecs = [
         },
     },
 ]
+
 app.listen(PORT, () => {
     mediasoup.createWorker()
         .then((worker) => worker.createRouter({ mediaCodecs }))
@@ -80,6 +81,17 @@ app.post(ROUTES.CREATE_TRANSPORT, async (req, res) => {
         sendTransport = transport;
     }
     else {
+        // if (recvTransport) {
+        //     console.log("created transport already ")
+        //     let { id, iceParameters, iceCandidates, dtlsParameters } = recvTransport;
+        //     return res.send(
+        //         {
+        //             transportOptions:
+        //                 { id, iceParameters, iceCandidates, dtlsParameters },
+        //             created: true
+        //         })
+
+        // }
         recvTransport = transport;
     }
     let { id, iceParameters, iceCandidates, dtlsParameters } = transport;
@@ -89,7 +101,6 @@ app.post(ROUTES.CREATE_TRANSPORT, async (req, res) => {
 app.post(ROUTES.CONNECT_TRANSPORT, async (req, res) => {
     const { mode, dtlsParameters } = req.body;
     const transport = (mode === 'send' ? sendTransport : recvTransport);
-    console.log("transport: ",transport)
     try {
         await transport.connect({ dtlsParameters });
     } catch (error) {
@@ -112,6 +123,7 @@ app.post(ROUTES.PRODUCE, async (req, res) => {
 
 app.post(ROUTES.CONSUME, async (req, res) => {
     const { rtpCapabilities, producerId } = req.body;
+
     const consumer = await recvTransport.consume({
         producerId: producerId,
         rtpCapabilities,
@@ -136,9 +148,15 @@ app.post(ROUTES.RESUME_CONSUMER, async (req, res) => {
 })
 
 app.post(ROUTES.GET_ALL_PRODUCERS, (req, res) => {
+    console.log("paused producers: ", producers.map(producer => producer.closed))
     res.send({
         producerIds: producers.map(producer => producer.id)
     })
+})
+
+app.post('/video-stream', (req, res) => {
+    const videoStream = fs.createReadStream('/Users/alumnus/projects/mediasoup/file_name.mp4');
+
 })
 
 app.post(ROUTES.STOP_PRODUCER, async (req, res) => {
