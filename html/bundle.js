@@ -36,10 +36,10 @@ $(document).ready(function () {
                 if (!device.canProduce('video')) {
                     console.log("Device can't produce video")
                 }
-                // return sendTransport.produce({
-                //     track: localCam.getVideoTracks()[0],
-                //     encodings: camEncodings(),
-                // });
+                return sendTransport.produce({
+                    track: localCam.getVideoTracks()[0],
+                    encodings: camEncodings(),
+                });
             })
             .then((res) => {
                 addLocalVideo('startcamera');
@@ -188,17 +188,27 @@ function updateConsumer() {
             console.log("Consumers to remove: ", exitProducers);
             console.log("Consumers to add: ", extraProducers);
             exitProducers.forEach(async (producer) => {
-                const consumer = consumers.filter(consumer => consumer.producerId === producer)[0];
-                console.log("consume remove: ", consumer)
-                if (consumer) {
-                    await consumer.close();
-                    const index = consumers.map(c => c.id).indexOf(consumer.id);
-                    console.log("Index: ", consumers, index)
-                    const videoEl = document.getElementById(`video-remote${index + 1}`)
-                    console.log("Video eleemt: ", videoEl);
-                    videoEl.srcObject = null;
-                    consumers.splice(index, 1);
-                }
+                // const consumer = consumers.filter(consumer => consumer.producerId === producer)[0];
+                // console.log("consume remove index: ", producer)
+                console.log("all consumers at glance: ",producer, consumers.map(c=>c._producerId))
+                consumers.forEach(async (consumer, index) => {
+                    console.log("index in each loop: ", index)
+                    if (consumer !== null && consumer._producerId === producer) {
+                        console.log("Enter to close .......***********............", consumer)
+                        const videoEl = document.getElementById(`video-remote${index + 1}`)
+                        videoEl.srcObject = null;
+                        consumers[index] = null;
+                        console.log("Consumers after remove: ", consumers, index)
+                        // await consumer.close();
+                        // const index = consumers.map(c => c.id).indexOf(consumer.id);
+                        // console.log("Index: ", consumers, index)
+                        // const videoEl = document.getElementById(`video-remote${index + 1}`)
+                        // console.log("Video eleemt: ", videoEl);
+                        // videoEl.srcObject = null;
+                        // consumers.splice(index, 1);
+                    }
+                })
+
             })
             extraProducers.forEach(async (producerId) => {
                 await attachConsumer(producerId);
@@ -206,6 +216,7 @@ function updateConsumer() {
         })
 }
 function attachConsumer(producerId) {
+    console.log("all consumers: ", consumers)
     return Promise.resolve()
         .then(() => httpPostRequest(ROUTES.CONSUME, {
             rtpCapabilities: device.rtpCapabilities,
@@ -216,11 +227,20 @@ function attachConsumer(producerId) {
             return recvTransport.consume(res);
         })
         .then(async (consumer) => {
-            consumers.push(consumer);
+            // const c = Object.assign({},consumer)
+            let i = null;
+
+            consumers.forEach((c, index) => {
+                if (c === null && i === null) {
+                    i = index;
+                    consumers[index] = { ...consumer }
+                }
+            })
+            console.log("attachconsumer consumers: ", consumers, i)
             await resumeConsumer(consumer);
-            return consumer;
+            return [consumer, i];
         })
-        .then((consumer) => addVideo(consumer, consumers.length - 1))
+        .then(([consumer, i]) => addVideo(consumer, i))
 }
 function resumeConsumer(consumer) {
     return httpPostRequest(ROUTES.RESUME_CONSUMER, {
@@ -246,6 +266,7 @@ function addVideo(consumer, i) {
     const { track } = consumer;
     console.log("Producer id : ", consumer.producerId, i);
     var videoElem = document.getElementById(`video-remote${i + 1}`);
+    console.log("Video eleemenee: ", videoElem);
     videoElem.srcObject = new MediaStream([track]);
     videoElem.play();
 }
@@ -10884,6 +10905,7 @@ module.exports = {
         SYNC: '/sync'
     }
 }
+
 },{}],48:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
