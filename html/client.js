@@ -22,6 +22,9 @@ $(document).ready(function () {
         .then(({ routerRtpCapabilities }) => {
             device.load({ routerRtpCapabilities })
         })
+    $('#direct-transport').one('click', async function () {
+        await httpPostRequest(ROUTES.CREATE_DIRECT_TRANSPORT, {})
+    })
     $('#start').one('click', async function () {
         $('#start').attr('disabled', true);
         $('#sharescreen').attr('disabled', true);

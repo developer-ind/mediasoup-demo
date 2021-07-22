@@ -8,6 +8,7 @@ const PORT = 3000;
 let router1;
 let sendTransport;
 let recvTransport;
+let videoTransport;
 let producers = [];
 let consumers = [];
 app.use(cors());
@@ -64,6 +65,40 @@ app.listen(PORT, () => {
 
 app.post(ROUTES.JOIN_PEER, (req, res) => {
     res.send({ routerRtpCapabilities: router1.rtpCapabilities })
+})
+
+app.get(ROUTES.CREATE_DIRECT_TRANSPORT, async (req, res) => {
+    videoTransport = await router1.createPlainTransport({
+        listenIp: '127.0.0.1',
+        rtcpMux: false,
+        comedia: true
+    });
+    const videoRtpPort = videoTransport.tuple.localPort;
+    const videoRtcpPort = videoTransport.rtcpTuple.localPort;
+    const videoProducer = await videoTransport.produce(
+        {
+            kind: 'video',
+            rtpParameters:
+            {
+                codecs:
+                    [
+                        {
+                            mimeType: 'video/vp8',
+                            clockRate: 90000,
+                            payloadType: 102,
+                            rtcpFeedback: [], // FFmpeg does not support NACK nor PLI/FIR.
+                        }
+                    ],
+                encodings: [{ ssrc: 22222222 }]
+            }
+        });
+    producers.push(videoProducer)
+    res.send({
+        created: true,
+        id: videoProducer.id,
+        rtp: videoRtpPort,
+        rtcp: videoRtcpPort
+    })
 })
 
 app.post(ROUTES.CREATE_TRANSPORT, async (req, res) => {
@@ -161,6 +196,7 @@ app.post('/video-stream', (req, res) => {
 
 app.post(ROUTES.STOP_PRODUCER, async (req, res) => {
     const { id } = req.body;
+    console.log("Producer id : ", id)
     await producers.filter(producer => producer.id === id)[0].close();
     const index = producers.indexOf(id);
     producers.splice(index, 1);

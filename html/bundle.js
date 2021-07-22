@@ -23,6 +23,9 @@ $(document).ready(function () {
         .then(({ routerRtpCapabilities }) => {
             device.load({ routerRtpCapabilities })
         })
+    $('#direct-transport').one('click', async function () {
+        await httpPostRequest(ROUTES.CREATE_DIRECT_TRANSPORT, {})
+    })
     $('#start').one('click', async function () {
         $('#start').attr('disabled', true);
         $('#sharescreen').attr('disabled', true);
@@ -185,27 +188,14 @@ function updateConsumer() {
             const extraProducers = producerIds.filter(p => !allProducers.includes(p));
             const exitProducers = allProducers.filter(a => !producerIds.includes(a));
             allProducers = [...producerIds];
-            console.log("Consumers to remove: ", exitProducers);
-            console.log("Consumers to add: ", extraProducers);
             exitProducers.forEach(async (producer) => {
                 // const consumer = consumers.filter(consumer => consumer.producerId === producer)[0];
                 // console.log("consume remove index: ", producer)
-                console.log("all consumers at glance: ",producer, consumers.map(c=>c._producerId))
                 consumers.forEach(async (consumer, index) => {
-                    console.log("index in each loop: ", index)
                     if (consumer !== null && consumer._producerId === producer) {
-                        console.log("Enter to close .......***********............", consumer)
                         const videoEl = document.getElementById(`video-remote${index + 1}`)
                         videoEl.srcObject = null;
                         consumers[index] = null;
-                        console.log("Consumers after remove: ", consumers, index)
-                        // await consumer.close();
-                        // const index = consumers.map(c => c.id).indexOf(consumer.id);
-                        // console.log("Index: ", consumers, index)
-                        // const videoEl = document.getElementById(`video-remote${index + 1}`)
-                        // console.log("Video eleemt: ", videoEl);
-                        // videoEl.srcObject = null;
-                        // consumers.splice(index, 1);
                     }
                 })
 
@@ -236,7 +226,6 @@ function attachConsumer(producerId) {
                     consumers[index] = { ...consumer }
                 }
             })
-            console.log("attachconsumer consumers: ", consumers, i)
             await resumeConsumer(consumer);
             return [consumer, i];
         })
@@ -10896,6 +10885,7 @@ module.exports = {
     ROUTES: {
         JOIN_PEER: '/join-as-new-peer',
         CREATE_TRANSPORT: '/create-transport',
+        CREATE_DIRECT_TRANSPORT: '/create-direct-transport',
         CONNECT_TRANSPORT: '/connect-transport',
         PRODUCE: '/produce',
         CONSUME: '/consume',
